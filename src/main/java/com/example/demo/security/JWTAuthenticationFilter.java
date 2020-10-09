@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.example.demo.impl.UserDetailsServiceImpl;
 import com.example.demo.model.persistence.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -11,7 +12,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -21,7 +21,7 @@ import java.util.Date;
 import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
 import static com.example.demo.security.SecurityConstants.*;
 
-
+@Slf4j
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private AuthenticationManager authenticationManager;
@@ -46,6 +46,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                             new ArrayList<>())
             );
         } catch (IOException e) {
+            log.error(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -54,7 +55,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest req,
                                             HttpServletResponse res,
                                             FilterChain chain,
-                                            Authentication auth) throws IOException, ServletException {
+                                            Authentication auth){
 
         String token = JWT.create()
                 .withSubject(((org.springframework.security.core.userdetails.User) auth.getPrincipal()).getUsername())

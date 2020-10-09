@@ -6,6 +6,7 @@ import com.example.demo.model.persistence.repositories.CartRepository;
 import com.example.demo.model.persistence.repositories.UserRepository;
 import com.example.demo.model.requests.CreateUserRequest;
 import com.example.demo.security.SaltGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -44,6 +46,19 @@ public class UserController {
 	public ResponseEntity<User> createUser(@RequestBody @Valid CreateUserRequest createUserRequest) {
 
 		if(!createUserRequest.getConfirmPassword().equals(createUserRequest.getPassword())){
+			log.error("User creation failed due to passwords do not match!");
+			return ResponseEntity.badRequest().build();
+		}
+
+		if(createUserRequest.getConfirmPassword().length() < 7 ||
+			createUserRequest.getPassword().length() < 7){
+			log.error("User creation failed due to passwords length is invalid!");
+			return ResponseEntity.badRequest().build();
+		}
+
+		if(userRepository.findByUsername(createUserRequest.getUsername()) != null){
+			log.error("User creation failed due to existing username " +
+					createUserRequest.getUsername());
 			return ResponseEntity.badRequest().build();
 		}
 
@@ -60,6 +75,7 @@ public class UserController {
 		user.setCart(cart);
 		userRepository.save(user);
 
+		log.info("User successfully created!");
 		return ResponseEntity.ok(user);
 	}
 }
